@@ -26,17 +26,19 @@ urls = (
     '/',                                    'RootController',
 )
 
+
 class RootController:
     def GET(self):
-        print 'hello world1'
-
+        print render.header()
+        print render.root()
+        print render.footer()
 #########################################################################
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
-if 'DEV' in os.environ:
-    middleware = [web.reloader]
-else:
-    middleware = []
-
 if __name__ == "__main__":
+
+    if 'DEV' in os.environ:
+        middleware = [web.reloader]
+    else:
+        middleware = []
     web.run(urls, globals(), *middleware)
