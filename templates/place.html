@@ -8,16 +8,18 @@ $def with (geoinfo, name)
 </ul>
 
 <ul class="field">
-    <li><h3>Address</h3>
-        <big>
-            $for geocoding in geoinfo['geocoding']: $geocoding <br/>
-        </big>
-    </li>
-    <li class="arrow"><h3>Links</h3>
-        <big>
-            $for url in geoinfo['urls']: <a href="$url">$url</a><br/>
-        </big>
-    </li>
+    $if len(geoinfo['geocoding']):
+        <li><h3>Address</h3>
+            <big>
+                $for geocoding in geoinfo['geocoding']: $geocoding <br/>
+            </big>
+        </li>
+    $if len(geoinfo['urls']):
+        <li class="arrow"><h3>Links</h3>
+            <big>
+                $for url in geoinfo['urls']: <a href="$url">$url</a><br/>
+            </big>
+        </li>
     <li class="arrow"><h3>Location</h3>
         <big>
           <a href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']">View in Maps</a>
