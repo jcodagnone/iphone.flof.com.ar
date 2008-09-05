@@ -1,0 +1,45 @@
+$def with (geoinfo, name)
+<ul class="profile">
+    <li class="picture"><a href="http://www.minid.net">name</a></li>
+    <li class="clearfix">
+        <h2>$geoinfo['name']</h2>
+        <p>...</p>
+    </li>
+</ul>
+
+<ul class="field">
+    <li><h3>Address</h3>
+        <big>
+            $for geocoding in geoinfo['geocoding']: $geocoding <br/>
+        </big>
+    </li>
+    <li class="arrow"><h3>Links</h3>
+        <big>
+            $for url in geoinfo['urls']: <a href="$url">$url</a><br/>
+        </big>
+    </li>
+    <li class="arrow"><h3>Location</h3>
+        <big>
+          <a href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']">View in Maps</a>
+          <a href="../../map/?ll=$geoinfo['lat'],$geoinfo['lon']">View in flof</a>
+        </big>
+    </li>
+    <li class="arrow">
+         <h3>Labels</h3>
+         <big>
+            $for label in geoinfo['labels']: <a href="../label/">$label</a>
+         </big>
+    </li>
+</ul>
+
+$if len(geoinfo['reviews']):
+  <h1>Reviews</h1>
+  <ul class="data">
+    $for review in geoinfo['reviews']: <li><p> $review['text']<br/>  -- <a href='../../user/$review['owner']/'>$review['owner']</a> on $review['date'].strftime('%F') </p></li>
+  </ul>
+
+$if len(geoinfo['photos']):
+    <h1>Photos</h1>
+    <ul><center>
+    $for photo in geoinfo['photos']: <li><a href="$photo['url']"><img src='$photo['thumb']'/></a></li>
+    </center></ul>
