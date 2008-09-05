@@ -29,7 +29,7 @@ from datetime import datetime
 
 urls = (
     '/',                                    'RootController',
-    '/place/(\d+)',                         'PlaceController',
+    '/place/(\d+)',                         'RedirectPlaceController',
     '/place/(\d+)/',                         'PlaceController',
 )
 
@@ -39,6 +39,11 @@ class RootController:
         print render.header()
         print render.root()
         print render.footer()
+
+class RedirectPlaceController:
+    def GET(self, id):
+        web.seeother(id + '/')
+
 
 class PlaceController:
     def GET(self, id):
