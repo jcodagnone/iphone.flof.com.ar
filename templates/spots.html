@@ -1,17 +1,18 @@
 $def with (spots, prefix, title)
 
 <h4>$title</h4>
-<ul id='recents'>
-$for spot in spots:
-    <li class='arrow'><a href="$prefix/place/$spot['id']/">$spot['name']</a>
-    $for label in spot['labels']: $label
-    </li>
+    <ul id='recents'>
+    $for spot in spots:
+        <li class='arrow'><a href="$prefix/place/$spot['id']/">$spot['name']</a>
+        $for label in spot['labels']: $label
+        </li> 
+    </ul>
+    $if len(spots) == 0:
+         <ul class='data'><p>No places to show :(</ul>
+    $else:
+        <p><span class='green button' id='more'>More Places</span></p> 
+        <script type='text/javascript'  src='$prefix/static/js/mootools-1.2-core-nc.js' ></script>
+        <script type='text/javascript' src='$prefix/static/js/more.js?v=$version'></script>
 
-</ul>
-
-<p><span class='green button' id='more'>More Places</span></p>
-
-<script type='text/javascript'  src='$prefix/static/js/mootools-1.2-core-nc.js' ></script>
-<script type='text/javascript' src='$prefix/static/js/more.js?v=$version'></script>
 
 

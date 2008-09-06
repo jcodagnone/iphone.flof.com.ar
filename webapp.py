@@ -34,8 +34,10 @@ urls = (
     '/recent/',                             'RecentController',
     '/recent/(\d+)',                        'RedirectArgumentController',
     '/recent/(\d+)/',                       'RecentController',
-    '/label/([^+\\"><|/]+)/',                'LabelController',
+    '/label/([^+\\"><|/]+)/',               'LabelController',
     '/label/([^+\\"><|/]+)/(\d+)/',         'LabelController',
+    '/user/([^+\\"><|/]+)/',                'UserController',
+    '/user/([^+\\"><|/]+)/(\d+)/',          'UserController',
 )
 
 
@@ -61,23 +63,32 @@ class RecentController:
         elif len(spots):
                 print render.recentpage(spots, page)
 
+class UserController:
+    def GET(self, user, page=1):
+        prefix = '../..'
+        page = int(page)
+
+        spots =  flof.user(user, page)
+        if page == 1:
+                print render.header('..')
+                print render.spots(spots, prefix, 
+                                  'Places by `%s\'' % user)
+                print render.footer()
+        elif len(spots):
+                print render.recentpage(spots, page, user)
+
 class LabelController:
     def GET(self, label, page=1):
         prefix = '../..'
         page = int(page)
-        referer = web.ctx.env.get('HTTP_REFERER')
-        if referer == None:
-                referer = prefix
         spots =  flof.label(label, page)
         if page == 1:
-                print render.header(referer)
+                print render.header('..')
                 print render.spots(spots, prefix, 
                                   'Places labeled with `%s\'' % label)
                 print render.footer()
         elif len(spots):
-                print render.recentpage(flof.label(label, page), page, label)
-
-
+                print render.recentpage(spots, page, label)
 
 class PlaceController:
     def GET(self, id):
@@ -95,16 +106,21 @@ class FlofFacade:
     URL_SPOT   = '%s/feeds/xml/geoinfo/%s/'
     URL_RECENT = '%s/feeds/xml/recent/?page=%s'
     URL_LABEL  = '%s/feeds/xml/label/%s/?page=%s'
+    URL_USER   = '%s/feeds/xml/user/%s/?page=%s'
     URL_THUMB  = '%s/bin/spot/image/?action=thumb&imageid=%s'
 
     def label(self, label, page=1):
         return self._parseSpots(self._retrieve(
                 self.URL_LABEL % (self.URL_BASE, label, page)), page)
 
+    def user(self, user, page=1):
+        return self._parseSpots(self._retrieve(
+                self.URL_USER% (self.URL_BASE, user, page)), page)
+
     def recent(self, page=1):
         return self._parseSpots(self._retrieve(
                 self.URL_RECENT % (self.URL_BASE, page)), page)
- 
+
     def geoinfo(self, id):
         soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
         ret = { 'urls': [],
