@@ -29,12 +29,11 @@ from datetime import datetime
 
 urls = (
     '/',                                    'RootController',
-    '/place/(\d+)',                         'RedirectPlaceController',
+    '/place/(\d+)',                         'RedirectArgumentController',
     '/place/(\d+)/',                        'PlaceController',
     '/recent/',                             'RecentController',
-    '/recent/(\d+)/',                       'PagedRecentController',
-
-
+    '/recent/(\d+)',                        'RedirectArgumentController',
+    '/recent/(\d+)/',                       'RecentController',
 )
 
 
@@ -44,23 +43,25 @@ class RootController:
         print render.root()
         print render.footer()
 
-class RedirectPlaceController:
-    def GET(self, id):
-        web.seeother(id + '/')
+class RedirectArgumentController:
+    def GET(self, argument):
+        web.seeother(argument + '/')
 
 class RecentController:
-    def GET(self):
-        print render.header('../')
-        print render.recent(flof.recent(1), 1)
-        print render.footer()
+    def GET(self, page=1):
+        if page == 1:
+                print render.header('../')
+                print render.recent(flof.recent(1), 1)
+                print render.footer()
+        else:
+                print render.recentpage(flof.recent(page), page)
 
-class PagedRecentController:
-    def GET(self, page):
-        print render.recentpage(flof.recent(page), page)
 
 class PlaceController:
     def GET(self, id):
         referer = web.ctx.env.get('HTTP_REFERER')
+        if referer == None:
+                referer = '../../'
         print render.header(referer)
         print render.place(flof.geoinfo(id))
         print render.footer()
