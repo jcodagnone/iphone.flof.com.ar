@@ -9,17 +9,15 @@ maximum-scale=1.0; user-scalable=0;" />
     <title>flof.com.ar | el mundo en etiquetas</title>
     <link rel="stylesheet" href="/static/stylesheets/iphone.css?v=$version" />
     <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png?v=$version" />
-    <script type="text/javascript" charset="utf-8">
-        window.onload = function() {
-          setTimeout(function(){window.scrollTo(0, 1);}, 100);
-        }
-    </script>
+    <script type='text/javascript'  src='/static/js/mootools-1.2-core-nc.js'></script>
+    <script type='text/javascript' src='/static/js/header.js?v=$version'></script>
 </head>
 
 <body>
     
     <div id="header">
         <h1>flof.com.ar</h1>
-        $if back:
-            <a href="$back" id="backButton">Back</a>
+        $if back: <a href="$back" id="backButton">Back</a>
+        <a class="nav Action" id='menu'>Menu</a>
     </div>
+

@@ -38,6 +38,7 @@ urls = (
     '/label/([^+\\"><|/]+)/(\d+)/',         'LabelController',
     '/user/([^+\\"><|/]+)/',                'UserController',
     '/user/([^+\\"><|/]+)/(\d+)/',          'UserController',
+    '/search/',                             'SearchController',
 )
 
 
@@ -77,6 +78,19 @@ class UserController:
         elif len(spots):
                 print render.recentpage(spots, page, user)
 
+class SearchController:
+    def GET(self, page=1):
+        prefix = '..'
+        page = int(page)
+        text = web.input().t
+        spots =  flof.search(text, page)
+        if page == 1:
+                print render.header('..')
+                print render.spots(spots, prefix, 
+                                  'Places that match `%s\'' % text)
+                print render.footer()
+        elif len(spots):
+                print render.recentpage(spots, page, text)
 class LabelController:
     def GET(self, label, page=1):
         prefix = '../..'
@@ -107,6 +121,7 @@ class FlofFacade:
     URL_RECENT = '%s/feeds/xml/recent/?page=%s'
     URL_LABEL  = '%s/feeds/xml/label/%s/?page=%s'
     URL_USER   = '%s/feeds/xml/user/%s/?page=%s'
+    URL_SEARCH = '%s/feeds/xml/text/?q=%s&page=%s'
     URL_THUMB  = '%s/bin/spot/image/?action=thumb&imageid=%s'
 
     def label(self, label, page=1):
@@ -120,6 +135,10 @@ class FlofFacade:
     def recent(self, page=1):
         return self._parseSpots(self._retrieve(
                 self.URL_RECENT % (self.URL_BASE, page)), page)
+
+    def search(self, text, page=1):
+        return self._parseSpots(self._retrieve(
+                self.URL_SEARCH % (self.URL_BASE, text, page)), page)
 
     def geoinfo(self, id):
         soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
