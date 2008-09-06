@@ -1,0 +1,19 @@
+$def with (spots, page)
+
+<h4>Recent places</h4>
+<ul id='recents'>
+$for spot in spots:
+    <li class='arrow'><a href="../place/$spot['id']/">$spot['name']</a>
+    $for label in spot['labels']: $label
+    </li>
+
+</ul>
+<ul>
+  <li class='arrow' id='more'>More Places..</li>
+</ul>
+
+<script type='text/javascript'  src='../static/js/mootools-1.2-core-nc.js' ></script>
+<script type='text/javascript' src='../static/js/more.js'></script>
+<script type='text/javascript'>
+    \$('more').page = $page + 1;
+</script>
