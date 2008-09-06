@@ -50,7 +50,7 @@ class RedirectPlaceController:
 
 class RecentController:
     def GET(self):
-        print render.header()
+        print render.header('../')
         print render.recent(flof.recent(1), 1)
         print render.footer()
 
@@ -60,7 +60,8 @@ class PagedRecentController:
 
 class PlaceController:
     def GET(self, id):
-        print render.header()
+        referer = web.ctx.env.get('HTTP_REFERER')
+        print render.header(referer)
         print render.place(flof.geoinfo(id))
         print render.footer()
 
