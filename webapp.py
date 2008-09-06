@@ -34,6 +34,8 @@ urls = (
     '/recent/',                             'RecentController',
     '/recent/(\d+)',                        'RedirectArgumentController',
     '/recent/(\d+)/',                       'RecentController',
+    '/label/([^+\\"><|/]+)/',                'LabelController',
+    '/label/([^+\\"><|/]+)/(\d+)/',         'LabelController',
 )
 
 
@@ -49,12 +51,32 @@ class RedirectArgumentController:
 
 class RecentController:
     def GET(self, page=1):
+        prefix = '..'
+        page = int(page)
+        spots = flof.recent(page)
         if page == 1:
-                print render.header('../')
-                print render.recent(flof.recent(1), 1)
+                print render.header(prefix)
+                print render.spots(spots, prefix, 'Recent Places')
                 print render.footer()
-        else:
-                print render.recentpage(flof.recent(page), page)
+        elif len(spots):
+                print render.recentpage(spots, page)
+
+class LabelController:
+    def GET(self, label, page=1):
+        prefix = '../..'
+        page = int(page)
+        referer = web.ctx.env.get('HTTP_REFERER')
+        if referer == None:
+                referer = prefix
+        spots =  flof.label(label, page)
+        if page == 1:
+                print render.header(referer)
+                print render.spots(spots, prefix, 
+                                  'Places labeled with `%s\'' % label)
+                print render.footer()
+        elif len(spots):
+                print render.recentpage(flof.label(label, page), page, label)
+
 
 
 class PlaceController:
@@ -66,40 +88,25 @@ class PlaceController:
         print render.place(flof.geoinfo(id))
         print render.footer()
 
-class Flof:
+class FlofFacade:
     headers = {}
-    URL_BASE =  'http://test.flof.com.ar'
-    #URL_BASE =  'http://localhost:9091'
-    URL_THUMB = '%s/bin/spot/image/?action=thumb&imageid=%s'
-    URL_SPOT =  '%s/feeds/xml/geoinfo/%s/'
-    URL_RECENT = ' %s/feeds/xml/recent/?page=%s'
+    URL_BASE   = 'http://test.flof.com.ar'
+    #URL_BASE  = 'http://localhost:9091'
+    URL_SPOT   = '%s/feeds/xml/geoinfo/%s/'
+    URL_RECENT = '%s/feeds/xml/recent/?page=%s'
+    URL_LABEL  = '%s/feeds/xml/label/%s/?page=%s'
+    URL_THUMB  = '%s/bin/spot/image/?action=thumb&imageid=%s'
 
-    def recent(self, page):
-        opener = urllib2.build_opener()
-        req = urllib2.Request(self.URL_RECENT % (self.URL_BASE, page), {},
-                              self.headers)
-        y = opener.open(req)
-        xml = y.read()
-        y.close()
-        soup = BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
-        spots = []
-        for i in soup.findChildren('spot'):
-            spot = {
-                'id':     i['id'],
-                'name':   i.geoinfo['name'],
-                'labels': [ j['name'] for j in i.findChildren('label') ],
-            }
-            spot['labels'].sort()
-            spots.append(spot)
-        return spots 
+    def label(self, label, page=1):
+        return self._parseSpots(self._retrieve(
+                self.URL_LABEL % (self.URL_BASE, label, page)), page)
+
+    def recent(self, page=1):
+        return self._parseSpots(self._retrieve(
+                self.URL_RECENT % (self.URL_BASE, page)), page)
  
     def geoinfo(self, id):
-        opener = urllib2.build_opener()
-        req = urllib2.Request(self.URL_SPOT % (self.URL_BASE, id),{}, self.headers)
-        y = opener.open(req)
-        xml = y.read()
-        y.close()
-        soup = BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
+        soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
         ret = { 'urls': [],
                 'geocoding': [],
                 'photos': [],
@@ -144,6 +151,24 @@ class Flof:
         ret['labels'] = labels
         return ret 
 
+    def _retrieve(self, url):
+        """ retrives a remote xml  """
+        y = urllib2.urlopen(url)
+        xml = y.read()
+        y.close()
+        return BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
+    def _parseSpots(self, soup, page):
+        spots = []
+        for i in soup.findChildren('spot'):
+            spot = {
+                'id':     i['id'],
+                'name':   i.geoinfo['name'],
+                'labels': [ j['name'] for j in i.findChildren('label') ],
+            }
+            spot['labels'].sort()
+            spots.append(spot)
+        return spots 
+
 def uniquer(seq, idfun=None):
     if idfun is None:
         def idfun(x): return x
@@ -164,7 +189,8 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-flof = Flof()
+template.Template.globals['version'] = '0.0'
+flof = FlofFacade()
 
 if __name__ == "__main__":
 
