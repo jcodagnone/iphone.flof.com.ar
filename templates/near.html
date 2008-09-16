@@ -1,0 +1,28 @@
+
+<h4>Find places near...</h4>
+<ul class="form">
+      <li class="error"><input id='address' type="text" name="address" /></li>
+      <li id='addresses' style='display: none;'>
+         <span id='noaddress'>No address found :(</span>
+         <span id='multipleaddr'></span>
+      </li>
+      <li>
+        <select name="d" id='distance'>
+          <option value="100">2 cuadras a la redonda</option>
+          <option value="250">5 cuadras a la redonda</option>
+          <option value="350">7 cuadras a la redonda</option>
+          <option value="450">9 cuadras a la redonda</option>
+        </select>       
+      </li>
+      <li>
+        <select id='labels' name="labels"/>
+      </li>
+</ul>
+<ul>
+  <li class='data' id='results'></li>
+</ul>
+
+
+<script type='text/javascript'  src='../static/js/mootools-1.2-core-nc.js'
+></script>
+<script type='text/javascript' src='../static/js/near.js'></script>

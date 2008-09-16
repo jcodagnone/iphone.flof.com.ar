@@ -20,7 +20,7 @@
 
 from sys import path
 path.append('site-packages')
-import web, os, urllib2
+import web, os, urllib2, urllib
 from web import template
 from BeautifulSoup import BeautifulStoneSoup
 from datetime import datetime
@@ -39,6 +39,9 @@ urls = (
     '/user/([^+\\"><|/]+)/',                'UserController',
     '/user/([^+\\"><|/]+)/(\d+)/',          'UserController',
     '/search/',                             'SearchController',
+    '/near/',                               'NearController',
+    '/feeds/xml/address/',                  'AddressController',
+    '/feeds/xml/distance/',                 'DistanceController',
 )
 
 
@@ -48,9 +51,15 @@ class RootController:
         print render.root()
         print render.footer()
 
-class RedirectArgumentController:
-    def GET(self, argument):
-        web.seeother(argument + '/')
+class NearController:
+    def GET(self):
+        print render.header()
+        print render.near()
+        print render.footer()
+       
+class RedirectPlaceController:
+    def GET(self, id):
+        web.seeother(id + '/')
 
 class RecentController:
     def GET(self, page=1):
@@ -112,6 +121,29 @@ class PlaceController:
         print render.header(referer)
         print render.place(flof.geoinfo(id))
         print render.footer()
+
+
+class AbstractProxyController:
+    def GET(self):
+        try:
+           y = urllib.urlopen('%s?%s' % (self.url,
+              web.ctx.env['QUERY_STRING']))
+           headers = str(y.info()).split('\n')
+           for h in headers:
+               if h.startswith("Content-Type:"):
+                   a = h.split(':')
+                   web.header(h[0], h[1].strip())
+           print y.read()
+           y.close()
+        except Exception, E:
+            print web.internalerror()
+            print "Some unexpected error occurred. Error text was:", E
+
+class AddressController(AbstractProxyController):
+    url = 'http://test.flof.com.ar/feeds/xml/address/'
+
+class DistanceController(AbstractProxyController):
+    url = 'http://test.flof.com.ar/feeds/xml/distance/'
 
 class FlofFacade:
     headers = {}
