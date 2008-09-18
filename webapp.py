@@ -42,6 +42,7 @@ urls = (
     '/near/',                               'NearController',
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
+    '/feeds/xml/lookup/',                   'SpotLookupController',
 )
 
 
@@ -144,6 +145,9 @@ class AddressController(AbstractProxyController):
 
 class DistanceController(AbstractProxyController):
     url = 'http://test.flof.com.ar/feeds/xml/distance/'
+
+class SpotLookupController(AbstractProxyController):
+    url = 'http://test.flof.com.ar/bin/spot/lookup/'
 
 class FlofFacade:
     headers = {}

@@ -15,17 +15,19 @@ window.addEvent('domready', function() {
                 'showCities' : 'false',
            },
            onComplete: function(txt, xml) {
-              updateAddress(xml);
+              resetView();
+              drawAddresses(parseAddressesFromXML(xml));
            }
        }).send();
    };
    address.value = defaultAddress;
+
+   $('distance').onchange= function(e) {
+       drawPlaces(parsePlaces());
+   };
 });
 
-var gLat = 0.0;
-var gLon = 0.0;
-
-function updateLabel() {
+function updateLabel(lat, lon) {
    var d = $('distance');
    var labels = $('labels');
 
@@ -33,8 +35,8 @@ function updateLabel() {
        method: 'get',
        url: '../feeds/xml/distance/',
        data: { 
-            'lat' : gLat,
-            'lon' : gLon,
+            'lat' : lat,
+            'lon' : lon,
             'd' : d[d.selectedIndex].value,
        },
        onComplete: function(txt, xml) {
@@ -54,64 +56,72 @@ function updateLabel() {
                 },
               }));
           }
+
+          var a = $('labelsLi');
+          var b = $('distanceLi');
+          if(a.style.display = 'none') {
+              a.style.display = 'block';
+          }
+          if(b.style.display = 'none') {
+              b.style.display = 'block';
+          }
        }
    }).send();
-
 }
 
-/** called on address search. parse the address results */
-function updateAddress(doc) {
-    var results =  doc.getElementsByTagName("results");
-    var places = []
-    for(var i = 0; i < results[0].childNodes.length; i++) {
-        if(results[0].childNodes[i].nodeType == 1) {
-            var e = results[0].childNodes[i];
-            var n;
-            if(e.nodeName == 'address') {
-                n = e.getElementsByTagName('street')[0].childNodes[0].data
-                      + ' '
-                      + e.getElementsByTagName('altura')[0].childNodes[0].data;
-            } else if(e.nodeName == 'street') {
-                n = e.getElementsByTagName('name')[0].childNodes[0].data;
-            }
 
-            places.push({
-                'name':  n,
-                'lat': e.getElementsByTagName('point')[0].getAttribute('y'),
-                'lon': e.getElementsByTagName('point')[0].getAttribute('x'),
-            });
-        }
-    }
+function resetView() {
+    $('distanceLi').style.displey = 'none';
+    $('labelsLi').style.displey = 'none';
+    $('results').style.displey = 'none';
+}
 
+function drawPlaces(places) {
+   var results = $('results');
 
+   // clean old results
+   if (results.childNodes.length > 0) {
+        results.removeChild(results.lastChild);
+   }
+
+   // no places found
+   if(places.length == 0) {
+        results.appendChild((new Element('li', { 'html': 'No places found :^(' })));
+   }
+
+   // places found
+   for(var i = 0; i < places.length ; i++) {
+       results.appendChild(new Element('li', { 'html': places[i].name, 
+                                                'class': 'arrow'}));
+   }
+}
+
+function drawAddresses(places) {
     var addresses = $('addresses');
     var noAddressFound = $('noaddress');
     var multipleFound = $('multipleaddr');
-    
+
     addresses.style.display = 'none';
     noAddressFound.style.display = 'none';
     multipleFound.style.display = 'none';
-    multipleFound.innerHTML = '';
+    multipleFound.innerHTML = ''
+
     if(places.length == 0) {
         noAddressFound.style.display = 'block';
     } else if(places.length == 1) {
-        gLon = places[0].lon;
-        gLat = places[0].lat;
-        updateLabel();
+        updateLabel(places[0].lat,  places[0].lon)
     } else {
         multipleFound.style.display = 'block';
         multipleFound.appendChild(new Element('span', { 
                 'html': 'Hummm. Multiple posibilities..'}));
- 
+        
         for(var i = 0; i < places.length; i++) {
            var div = new Element('div', { 
                 'html': places[i].name,
                 'events': {
                     'click': function(e) {
-                         gLon = this.lon;
-                         gLat = this.lat;
                          multipleFound.style.display = 'none';
-                         updateLabel();
+                         updateLabel(this.lat, this.lon);
                      },
                 },
            });
@@ -124,6 +134,51 @@ function updateAddress(doc) {
 
     addresses.style.display = 'block';
 }
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+/** 
+ *  called on address search. parse the address results. returns an array of
+ *  {name, lat, lon}
+ */
+function parseAddressesFromXML(doc) {
+    var results =  doc.getElementsByTagName("results");
+    var places = []
+    for(var i = 0; i < results[0].childNodes.length; i++) {
+        if(results[0].childNodes[i].nodeType == 1) {
+            var e = results[0].childNodes[i];
+            var n;
+            if(e.nodeName == 'address') {
+                if(e.getElementsByTagName('altura').length > 0) {
+                     n = e.getElementsByTagName('street')[0].childNodes[0].data
+                       + ' '
+                       + e.getElementsByTagName('altura')[0].childNodes[0].data;
+                } else {
+                     n = e.getElementsByTagName('street1')[0].childNodes[0].data
+                      + ' y '
+                      + e.getElementsByTagName('street2')[0].childNodes[0].data;
+                }
+            } else if(e.nodeName == 'street') {
+                n = e.getElementsByTagName('name')[0].childNodes[0].data;
+            }
+
+            places.push({
+                'name':  n,
+                'lat': e.getElementsByTagName('point')[0].getAttribute('y'),
+                'lon': e.getElementsByTagName('point')[0].getAttribute('x'),
+            });
+        }
+    }
+    return places;
+}
+
+function parsePlaces() {
+    return [{
+               'name':       'Test',
+               'distance':   '12',
+       }, ];
+}
+
 
 function clickclear(thisfield, defaulttext) {
     if (thisfield.value == defaulttext) {
