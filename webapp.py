@@ -140,7 +140,7 @@ class AbstractProxyController:
            for h in headers:
                if h.startswith("Content-Type:"):
                    a = h.split(':')
-                   web.header(h[0], h[1].strip())
+                   web.header(a[0], a[1].strip())
            print y.read()
            y.close()
         except Exception, E:
