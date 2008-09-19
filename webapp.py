@@ -20,7 +20,7 @@
 
 from sys import path
 path.append('site-packages')
-import web, os, urllib2, urllib
+import web, os, urllib2, urllib, math
 from web import template
 from BeautifulSoup import BeautifulStoneSoup
 from datetime import datetime
@@ -40,6 +40,7 @@ urls = (
     '/user/([^+\\"><|/]+)/(\d+)/',          'UserController',
     '/search/',                             'SearchController',
     '/near/',                               'NearController',
+    '/near/([^/]+)/([^/]+)/(\d+)/(\d+)/','NearPlacesController',
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
     '/feeds/xml/lookup/',                   'SpotLookupController',
@@ -57,7 +58,12 @@ class NearController:
         print render.header()
         print render.near()
         print render.footer()
-       
+
+class NearPlacesController:
+    def GET(self, lat, lon, distance, page):
+        spots = flof.near(lat, lon, distance, page);
+        print render.nearpage(spots, page)
+
 class RedirectPlaceController:
     def GET(self, id):
         web.seeother(id + '/')
@@ -152,13 +158,13 @@ class SpotLookupController(AbstractProxyController):
 class FlofFacade:
     headers = {}
     URL_BASE   = 'http://test.flof.com.ar'
-    #URL_BASE  = 'http://localhost:9091'
     URL_SPOT   = '%s/feeds/xml/geoinfo/%s/'
     URL_RECENT = '%s/feeds/xml/recent/?page=%s'
     URL_LABEL  = '%s/feeds/xml/label/%s/?page=%s'
     URL_USER   = '%s/feeds/xml/user/%s/?page=%s'
     URL_SEARCH = '%s/feeds/xml/text/?q=%s&page=%s'
     URL_THUMB  = '%s/bin/spot/image/?action=thumb&imageid=%s'
+    URL_LOOKUP = '%s/bin/spot/lookup/?lat=%s&lon=%s&d=%s&page=%s'
 
     def label(self, label, page=1):
         return self._parseSpots(self._retrieve(
@@ -175,6 +181,10 @@ class FlofFacade:
     def search(self, text, page=1):
         return self._parseSpots(self._retrieve(
                 self.URL_SEARCH % (self.URL_BASE, text, page)), page)
+
+    def near(self, lat, lon, distance, page):
+        return self._parseSpotsGeoinfo(self._retrieve(
+                self.URL_LOOKUP % (self.URL_BASE, lat, lon, distance, page)), page)
 
     def geoinfo(self, id):
         soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
@@ -228,13 +238,35 @@ class FlofFacade:
         xml = y.read()
         y.close()
         return BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
+
+    def _parseSpotsGeoinfo(self, soup, page):
+        ret = []
+        for spots in soup.findChildren('spots'):
+            labels = {}
+            for i in spots.findChildren('label'):
+                if labels.has_key(i['name']):
+                   labels[i['name']] =  labels[i['name']] + 1
+                else:
+                   labels[i['name']] =  1
+            l = [{'name': i, 'freq': labels[i]} for i in labels]
+            l.sort(lambda x, y: cmp(y['freq'], x['freq']))
+            spot = {
+                 'id':       spots.findChildren('label')[0].parent.parent['id'],
+                 'name':     spots.parent['name'],
+                 'labels':   [i['name'] for i in l],
+                 'distance': int(math.ceil(float(spots.findChildren('label')[0].parent.parent['distance']))),
+
+            }
+            ret.append(spot)
+        return ret 
+
     def _parseSpots(self, soup, page):
         spots = []
         for i in soup.findChildren('spot'):
             spot = {
                 'id':     i['id'],
                 'name':   i.geoinfo['name'],
-                'labels': [ j['name'] for j in i.findChildren('label') ],
+                'labels': [ j['name'] for j in i.findChildren('label') ]
             }
             spot['labels'].sort()
             spots.append(spot)

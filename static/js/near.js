@@ -6,6 +6,7 @@ window.addEvent('domready', function() {
        clickclear(this, defaultAddress);
    };
 
+   // address.onchange = address.onblur = function(e) {
    address.onblur = function(e) {
        var req = new Request({
            method: 'get',
@@ -22,10 +23,57 @@ window.addEvent('domready', function() {
    };
    address.value = defaultAddress;
 
+   var moreElement = $('more');
    $('distance').onchange= function(e) {
-       drawPlaces(parsePlaces());
+        updatePlaces(moreElement.lat, moreElement.lon, moreElement.page);
    };
+
+    moreElement.page = 2;
+    moreElement.addEvent('click', function() {
+        updatePlaces(this.lat, this.lon, this.page);
+        this.page = this.page + 1;
+    });
 });
+
+function onPositionSelected(lat, lon) {
+   var moreElement = $('more');
+   moreElement.lat = lat;
+   moreElement.lon = lon;
+   updateLabel(lat, lon);
+   updatePlaces(lat, lon, 1);
+}
+
+function updatePlaces(lat, lon, page) {
+   var d = $('distance');
+
+   var req = new Request({
+       method: 'get',
+       url: '../near/' + lat +  '/' + lon + '/' 
+                       + d[d.selectedIndex].value + '/' + page + '/',
+       onComplete: function(response) {
+         var more = $('more');
+         if(response.length < 2) {
+             more.style.display = 'none';
+         } else {
+             var results = $('results');
+             if(page == 1) {
+                results.innerHTML = '';
+             }
+             var div = document.createElement('div');
+             div.innerHTML = response;
+             for(var i = 0; i < div.childNodes.length; i++) {
+                 results.appendChild(div.childNodes[i]);
+             }
+             if(page == 1) {
+                results.style.display = 'block'
+                more.page = 2;
+                more.style.display = 'block';
+             }
+         }
+       }
+   }).send();
+
+}
 
 function updateLabel(lat, lon) {
    var d = $('distance');
@@ -67,33 +115,14 @@ function updateLabel(lat, lon) {
           }
        }
    }).send();
-}
 
+}
 
 function resetView() {
-    $('distanceLi').style.displey = 'none';
-    $('labelsLi').style.displey = 'none';
-    $('results').style.displey = 'none';
-}
-
-function drawPlaces(places) {
-   var results = $('results');
-
-   // clean old results
-   if (results.childNodes.length > 0) {
-        results.removeChild(results.lastChild);
-   }
-
-   // no places found
-   if(places.length == 0) {
-        results.appendChild((new Element('li', { 'html': 'No places found :^(' })));
-   }
-
-   // places found
-   for(var i = 0; i < places.length ; i++) {
-       results.appendChild(new Element('li', { 'html': places[i].name, 
-                                                'class': 'arrow'}));
-   }
+    $('distanceLi').style.display = 'none';
+    $('labelsLi').style.display = 'none';
+    $('results').style.display = 'none';
+    $('more').style.display = 'block';
 }
 
 function drawAddresses(places) {
@@ -109,7 +138,7 @@ function drawAddresses(places) {
     if(places.length == 0) {
         noAddressFound.style.display = 'block';
     } else if(places.length == 1) {
-        updateLabel(places[0].lat,  places[0].lon)
+        onPositionSelected(places[0].lat,  places[0].lon)
     } else {
         multipleFound.style.display = 'block';
         multipleFound.appendChild(new Element('span', { 
@@ -121,7 +150,7 @@ function drawAddresses(places) {
                 'events': {
                     'click': function(e) {
                          multipleFound.style.display = 'none';
-                         updateLabel(this.lat, this.lon);
+                         onPositionSelected(this.lat, this.lon);
                      },
                 },
            });
@@ -171,14 +200,6 @@ function parseAddressesFromXML(doc) {
     }
     return places;
 }
-
-function parsePlaces() {
-    return [{
-               'name':       'Test',
-               'distance':   '12',
-       }, ];
-}
-
 
 function clickclear(thisfield, defaulttext) {
     if (thisfield.value == defaulttext) {
