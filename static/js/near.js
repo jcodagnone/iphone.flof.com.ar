@@ -2,7 +2,6 @@ window.addEvent('domready', function() {
    var address = $('address');
    var defaultAddress = 'Callao y Santa Fe'
    address.onclick = function(e) {
-       // e.stop();
        clickclear(this, defaultAddress);
    };
 
@@ -25,14 +24,28 @@ window.addEvent('domready', function() {
 
    var moreElement = $('more');
    $('distance').onchange= function(e) {
-        updatePlaces(moreElement.lat, moreElement.lon, moreElement.page);
+        moreElement.page = 1;
+        updateLabel(moreElement.lat, moreElement.lon);
+        updatePlaces(moreElement.lat, moreElement.lon, moreElement.page,
+                     moreElement.label);
    };
 
-    moreElement.page = 2;
+    moreElement.page = 1;
+    moreElement.label = '';
+    moreElement.lat = 0;
+    moreElement.lon = 0;
     moreElement.addEvent('click', function() {
-        updatePlaces(this.lat, this.lon, this.page);
+        updatePlaces(this.lat, this.lon, this.page, moreElement.label);
         this.page = this.page + 1;
     });
+
+    $('labels').onchange= function(e) {
+        moreElement.label = this.selectedIndex == 0 ? '' : 
+                            this.options[this.selectedIndex].value;
+        
+        moreElement.page = 1;
+        updatePlaces(moreElement.lat, moreElement.lon, moreElement.page, moreElement.label);
+   }
 });
 
 function onPositionSelected(lat, lon) {
@@ -40,16 +53,18 @@ function onPositionSelected(lat, lon) {
    moreElement.lat = lat;
    moreElement.lon = lon;
    updateLabel(lat, lon);
-   updatePlaces(lat, lon, 1);
+   moreElement.label = '';
+   updatePlaces(lat, lon, 1, moreElement.label);
 }
 
-function updatePlaces(lat, lon, page) {
+function updatePlaces(lat, lon, page, label) {
    var d = $('distance');
 
    var req = new Request({
        method: 'get',
        url: '../near/' + lat +  '/' + lon + '/' 
-                       + d[d.selectedIndex].value + '/' + page + '/',
+                       + d[d.selectedIndex].value + '/' + page + '/'
+                       + (label == ''  ? '' :  (label + '/')),
        onComplete: function(response) {
          var more = $('more');
          if(response.length < 2) {
@@ -87,24 +102,25 @@ function updateLabel(lat, lon) {
             'lon' : lon,
             'd' : d[d.selectedIndex].value,
        },
-       onComplete: function(txt, xml) {
+       onComplete: function(txt, xml) {a
+          var selected = labels.selectedIndex == 0 ? '' : 
+                  labels.options[labels.selectedIndex].value;
+ 
+          labels.innerHTML = '';
           var entries = xml.getElementsByTagName('entry');
 
           labels.appendChild(new Element('option', { 
                 'html': 'Filter by label...'}));
           for(var i = 0; i < entries.length; i++) {
               var show = entries[i].getElementsByTagName('showText')[0].childNodes[0].data;
-              var label = entries[i].getElementsByTagName('inputText')[0].childNodes[0].data;
 
-             labels.appendChild(new Element('option', {
-                  'html': show,
-                  'events': {
-                  'click': function(e) {
-                   },
-                },
-              }));
+             var e = new Element('option', { 'html': show, });
+             e.value = entries[i].getElementsByTagName('inputText')[0].childNodes[0].data;
+             if(e.value == selected)  {
+                e.selected = 'true';
+             }
+             labels.appendChild(e);
           }
-
           var a = $('labelsLi');
           var b = $('distanceLi');
           if(a.style.display = 'none') {

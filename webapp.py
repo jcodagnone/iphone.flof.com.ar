@@ -41,6 +41,7 @@ urls = (
     '/search/',                             'SearchController',
     '/near/',                               'NearController',
     '/near/([^/]+)/([^/]+)/(\d+)/(\d+)/','NearPlacesController',
+    '/near/([^/]+)/([^/]+)/(\d+)/(\d+)/([^/]+)/','NearPlacesController',
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
     '/feeds/xml/lookup/',                   'SpotLookupController',
@@ -55,13 +56,13 @@ class RootController:
 
 class NearController:
     def GET(self):
-        print render.header()
+        print render.header('..')
         print render.near()
         print render.footer()
 
 class NearPlacesController:
-    def GET(self, lat, lon, distance, page):
-        spots = flof.near(lat, lon, distance, page);
+    def GET(self, lat, lon, distance, page, label = None):
+        spots = flof.near(lat, lon, distance, page, label);
         print render.nearpage(spots, page)
 
 class RedirectPlaceController:
@@ -182,9 +183,11 @@ class FlofFacade:
         return self._parseSpots(self._retrieve(
                 self.URL_SEARCH % (self.URL_BASE, text, page)), page)
 
-    def near(self, lat, lon, distance, page):
-        return self._parseSpotsGeoinfo(self._retrieve(
-                self.URL_LOOKUP % (self.URL_BASE, lat, lon, distance, page)), page)
+    def near(self, lat, lon, distance, page, label=None):
+        url = self.URL_LOOKUP % (self.URL_BASE, lat, lon, distance, page)
+        if label != None:
+            url =  url + '&match=all&label0=' + label
+        return self._parseSpotsGeoinfo(self._retrieve(url), page)
 
     def geoinfo(self, id):
         soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
