@@ -1,0 +1,5 @@
+$def with (spots)
+$for spot in spots:
+    <li class='arrow'><small> $spot['distance'] mts</small><a href="../place/$spot['id']/">$spot['name']</a><a href="../place/$spot['id']/">
+    $for label in spot['labels']: $label
+    </a></li>
