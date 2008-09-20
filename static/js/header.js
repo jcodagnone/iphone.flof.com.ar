@@ -280,4 +280,21 @@ window.addEvent('domready', function() {
     } else if($('js-near')) {
         registerProximity();
     }
+
+    var panelElement = $('optionpanel');
+    $('menu').onclick = function(e) {
+        if(panelElement.style.display == 'block') {
+                panelElement.style.display = 'none';
+        } else {
+                panelElement.style.display = 'block';
+        }
+    };
+
+    $('menuHide').onclick = function(e) {
+        panelElement.style.display = 'none';
+    };
 });
+
+window.onload = function() {
+      setTimeout(function(){window.scrollTo(0, 1);}, 100);
+}
