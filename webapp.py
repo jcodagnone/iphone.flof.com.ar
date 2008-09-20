@@ -187,7 +187,8 @@ class FlofFacade:
         url = self.URL_LOOKUP % (self.URL_BASE, lat, lon, distance, page)
         if label != None:
             url =  url + '&match=all&label0=' + label
-        return self._parseSpotsGeoinfo(self._retrieve(url), page)
+        return self._parseSpotsGeoinfo(self._retrieve(url), 
+                                   float(lat), float(lon), page)
 
     def geoinfo(self, id):
         soup = self._retrieve(self.URL_SPOT % (self.URL_BASE, id))
@@ -242,7 +243,7 @@ class FlofFacade:
         y.close()
         return BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
 
-    def _parseSpotsGeoinfo(self, soup, page):
+    def _parseSpotsGeoinfo(self, soup, lat, lon, page):
         ret = []
         for spots in soup.findChildren('spots'):
             labels = {}
@@ -260,6 +261,20 @@ class FlofFacade:
                  'distance': int(math.ceil(float(spots.findChildren('label')[0].parent.parent['distance']))),
 
             }
+            #point = spots.parent.parent.parent
+            #phi = math.degrees(math.atan2(
+            #                    float(point['x']) - lat,
+            #                    float(point['y']) -lon
+            #                  ))
+            #if (phi >= 0 and phi <= 45) or (phi <= 0 and phi >= -45):
+            #    d = 'E'
+            #elif phi >= 45 and phi <= 135:
+            #    d = 'N'
+            #elif phi <= -45 and phi >= -135:
+            #    d = 'S'
+            #else:
+            #    d = 'W'
+            #spot['orientation'] = d
             ret.append(spot)
         return ret 
 
@@ -295,7 +310,7 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-template.Template.globals['version'] = '0.0'
+template.Template.globals['version'] = '0.0.0b2'
 flof = FlofFacade()
 
 if __name__ == "__main__":

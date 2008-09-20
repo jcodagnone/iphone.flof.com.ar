@@ -10,8 +10,4 @@ $def with (spots, prefix, title)
     $if len(spots) == 0:
          <ul class='data'><p>No places to show :(</ul>
     $else:
-        <p><span class='green button' id='more'>More Places</span></p> 
-        <script type='text/javascript' src='$prefix/static/js/more.js?v=$version'></script>
-
-
-
+        <p id='js-more'><span class='green button' id='more'>More Places</span></p> 
