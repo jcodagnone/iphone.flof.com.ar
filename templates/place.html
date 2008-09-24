@@ -35,10 +35,9 @@ $def with (geoinfo)
 </ul>
 
 $if len(geoinfo['reviews']):
-  <h1>Reviews</h1>
-  <ul class="data">
-    $for review in geoinfo['reviews']: <li><p> $review['text']<br/>  -- <a href='../../user/$review['owner']/'>$review['owner']</a> on $review['date'].strftime('%F') </p></li>
-  </ul>
+    <h1>Reviews</h1><ul class="data">
+            $for review in geoinfo['reviews']: <li><p> $review['text']<br/>  -- <a href='../../user/$review['owner']/'>$review['owner']</a> on $review['date'].strftime('%F') </p></li>
+    </ul>
 
 $if len(geoinfo['photos']):
     <h1>Photos</h1>
