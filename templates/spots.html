@@ -3,9 +3,10 @@ $def with (spots, prefix, title)
 <h4>$title</h4>
     <ul id='recents'>
     $for spot in spots:
-        <li class='arrow'><a href="$prefix/place/$spot['id']/">$spot['name']</a>
+        <li class='arrow'><a
+        href="$prefix/place/$spot['id']/">$spot['name']</a><a href="$prefix/place/$spot['id']/">
         $for label in spot['labels']: $label
-        </li> 
+        </a></li> 
     </ul>
     $if len(spots) == 0:
          <ul class='data'><p>No places to show :(</ul>
