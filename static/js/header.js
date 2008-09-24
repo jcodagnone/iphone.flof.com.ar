@@ -50,11 +50,15 @@ function registerMoreElement() {
     var moreElement = $('more')
     var recents = $('recents')
     moreElement.page = 2;
+
     moreElement.addEvent('click', function() {
+       proximity.startProgressBar();
         var req = new Request({  
                  method: 'get',  
                  url:  moreElement.page  + '/',
+                 onFailure: proximity.stopProgressBar,
                  onComplete: function(response) {
+                    proximity.stopProgressBar();
                     if(response.length == 0) {
                         moreElement.style.display = 'none';
                         moreElement.onclick = function (e)  {
@@ -83,6 +87,7 @@ function ProximitySearch() {
    this.label = '';
    this.lat = 0;
    this.lon = 0;
+   this.nProgress =  0;
 }
 
 /**
@@ -93,6 +98,8 @@ ProximitySearch.prototype.updateLabel = function() {
    var d = $('distance');
    var labels = $('labels');
 
+   var este = this;
+   this.startProgressBar();
    var req = new Request({
        method: 'get',
        url: '../feeds/xml/distance/',
@@ -101,7 +108,9 @@ ProximitySearch.prototype.updateLabel = function() {
             'lon' : this.lon,
             'd' : d[d.selectedIndex].value,
        },
+       onFailure: este.stopProgressBar,
        onComplete: function(txt, xml) {
+           este.stopProgressBar();
            var selected = labels.selectedIndex == 0 ? '' : 
                    labels.options[labels.selectedIndex].value;
 
@@ -180,12 +189,16 @@ ProximitySearch.prototype.updatePlaces = function() {
    var d = $('distance');
  
    var proximity = this; 
+
+   proximity.startProgressBar();
    var req = new Request({
        method: 'get',
        url: '../near/' + this.lat +  '/' + this.lon + '/' 
                        + d[d.selectedIndex].value + '/' + this.page + '/'
                        + (this.label == ''  ? '' :  (this.label + '/')),
+       onFailure: proximity.stopProgressBar,
        onComplete: function(response) {
+         proximity.stopProgressBar();
          var moreElement = $('more');
          if(response.length < 2) {
              moreElement.style.display = 'none';
@@ -253,6 +266,21 @@ ProximitySearch.prototype.onPositionSelected = function(lat, lon) {
    this.updatePlaces(lat, lon, 1, this.label);
 }
 
+ProximitySearch.prototype.startProgressBar = function() {
+    this.nProgress++;
+    $('menuLoad').style.display = 'block';
+}
+
+
+ProximitySearch.prototype.stopProgressBar = function() {
+    this.nProgress--;
+    if(this.nProgress <= 0) {
+       this.nProgress = 0;
+       $('menuLoad').style.display = 'none';
+    }
+
+}
+
 function registerProximity() {
    var proximity = new ProximitySearch();
 
@@ -264,8 +292,8 @@ function registerProximity() {
        }
    };
 
-   // address.onchange = address.onblur = function(e) {
    address.onblur = function(e) {
+       proximity.startProgressBar();
        var req = new Request({
            method: 'get',
            url: '../feeds/xml/address/',
@@ -273,7 +301,9 @@ function registerProximity() {
                 'text' : address.value,
                 'showCities' : 'false',
            },
+           onFailure: proximity.stopProgressBar,
            onComplete: function(txt, xml) {
+              proximity.stopProgressBar();
               $('distanceLi').style.display = 'none';
               $('labelsLi').style.display = 'none';
               $('results').style.display = 'none';
