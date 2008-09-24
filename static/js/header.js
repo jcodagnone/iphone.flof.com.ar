@@ -1,3 +1,36 @@
+//////////////////////////////////////////////////////////////////////////
+// 
+//////////////////////////////////////////////////////////////////////////
+function registerSearch() {
+    var labelForm = $('labelForm');
+    labelForm.onsubmit = function() {
+          var label = document.forms.labelForm.elements[0].value;
+          document.forms.labelForm.action='/label/' + label + '/';
+          document.forms.labelForm.elements[0].value = '';
+          return label != ''
+    }
+
+    var userForm = $('userForm');
+    userForm.onsubmit = function() {
+          var label = document.forms.userForm.elements[0].value;
+          document.forms.userForm.action='/user/' + label + '/';
+          document.forms.userForm.elements[0].value = '';
+
+          return label != ''
+    }
+
+    var textForm = $('js-search');
+    textForm.onsubmit = function() {
+          var label = document.forms.textForm.elements[0].value;
+          return label != ''
+    }
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Menu & More
+//////////////////////////////////////////////////////////////////////////
+
 /** 
  * registra todos los eventos sobre el elemento 'Menu' que es quien muestra
  *  el menu
@@ -279,6 +312,8 @@ window.addEvent('domready', function() {
         registerMoreElement();
     } else if($('js-near')) {
         registerProximity();
+    } else if($('js-search')) {
+        registerSearch();
     }
 
     var panelElement = $('optionpanel');

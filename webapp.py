@@ -99,22 +99,32 @@ class SearchController:
     def GET(self, page=1):
         prefix = '..'
         page = int(page)
-        text = web.input().t
-        spots =  flof.search(text, page)
-        if page == 1:
-                print render.header('..')
-                print render.spots(spots, prefix, 
-                                  'Places that match `%s\'' % text)
-                print render.footer()
-        elif len(spots):
-                print render.recentpage(spots, page, text)
+        if 't' in web.input():
+            text = web.input().t
+        else:
+            text = None
+        if text == None or text == '':
+            print render.header('..')
+            print render.search()
+            print render.footer()
+        else:
+            spots =  flof.search(text, page)
+            if page == 1:
+                    print render.header('..')
+                    print render.spots(spots, prefix, 
+                                      'Places that match `%s\'' % text)
+                    print render.footer()
+            elif len(spots):
+                    print render.recentpage(spots, page, text)
 class LabelController:
     def GET(self, label, page=1):
         prefix = '../..'
         page = int(page)
         spots =  flof.label(label, page)
+        referer = web.ctx.env.get('HTTP_REFERER')
+
         if page == 1:
-                print render.header('..')
+                print render.header(referer)
                 print render.spots(spots, prefix, 
                                   'Places labeled with `%s\'' % label)
                 print render.footer()
