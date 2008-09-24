@@ -211,10 +211,13 @@ class FlofFacade:
                        'thumb': self.URL_THUMB % (self.URL_BASE, i['id']),
                    })
 
+
             if i['description']:
+
+                d = BeautifulStoneSoup(i['description'], convertEntities=BeautifulStoneSoup.HTML_ENTITIES).contents[0].encode('utf-8') 
                 ret['reviews'].append({
                     'owner': i['owner'],
-                    'text':  i['description'],
+                    'text':  d,
                     'date':  datetime.strptime(i.date.contents[0][:-9], 
                                               "%Y-%m-%d %H:%M:%S")
                 })
@@ -241,7 +244,7 @@ class FlofFacade:
         y = urllib2.urlopen(url)
         xml = y.read()
         y.close()
-        return BeautifulStoneSoup(xml,  convertEntities='xml', smartQuotesTo='xml')
+        return BeautifulStoneSoup(xml, convertEntities=BeautifulStoneSoup.HTML_ENTITIES)
 
     def _parseSpotsGeoinfo(self, soup, lat, lon, page):
         ret = []
@@ -312,6 +315,11 @@ render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
 template.Template.globals['version'] = '0.0.0b2'
 flof = FlofFacade()
+
+
+
+
+
 
 if __name__ == "__main__":
 
