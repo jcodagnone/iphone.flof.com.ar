@@ -45,7 +45,6 @@ urls = (
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
     '/feeds/xml/lookup/',                   'SpotLookupController',
-    '/k/(\d+)/',                            'KMLController',
 )
 
 
@@ -140,27 +139,6 @@ class PlaceController:
         print render.header(referer)
         print render.place(flof.geoinfo(id))
         print render.footer()
-
-class KMLController:
-    def GET(self, id):
-        spot = flof.geoinfo(id)
-        url = 'http://flof.com.ar/feeds/kmz/map/?lat=%s&lon=%s&d=600&page=1&compress=false' % (spot['lat'], spot['lon'])
-
-        try:
-           y = urllib.urlopen('%s?%s' % (url,
-              web.ctx.env['QUERY_STRING']))
-           headers = str(y.info()).split('\n')
-           for h in headers:
-               if h.startswith("Content-Type:"):
-                   a = h.split(':')
-                   web.header(a[0], a[1].strip())
-           print y.read()
-           y.close()
-        except Exception, E:
-            print web.internalerror()
-            print "Some unexpected error occurred. Error text was:", E
-
-
 
 class AbstractProxyController:
     def GET(self):
