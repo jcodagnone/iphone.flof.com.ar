@@ -45,7 +45,7 @@ urls = (
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
     '/feeds/xml/lookup/',                   'SpotLookupController',
-    '/image/container/(\d+)/',              'MapImageContainerController',
+    '/image/html/(\d+)/',                   'MapImageContainerController',
     '/image/data/(\d+)/',                   'MapImageDataController',
 )
 
@@ -71,7 +71,8 @@ class FlofTile(object):
          self.data = None
 
     def size(self):
-        return [320, 356]
+        #return [320, 356]
+        return [320, 416]
 
     def bounds(self):
        h = 1000.0
@@ -86,18 +87,20 @@ class MapImageDataController:
     def __init__(self):
         import TileCache.Service
         from TileCache.Caches.Disk import Disk
-        from TileCache.Layer import Layer, Tile
 
-
-        self.layer = Layer("basic", debug=True)
-        self.layer = Mapnik('foo', mapfile='/home/prueba/mapnik/osm.xml')
+        self.layer = Mapnik('osm-iphone-big',
+                 mapfile='/home/common/web/app/osm/mapnik/osm-shirley.xml',
+                 watermarkimage='static/images/watermark.png',
+                 watermarkopacity=1.0)
+        #self.watermarkimage = '/home/common/web/app/flof/static/images/watermark.png'
+        #self.watermarkopacity = '1.0'
         self.tileService = TileCache.Service(Disk("/tmp/tilecache"),
                                              {"layer": self.layer})
         
     def GET(self, id):
         format, image = self.tileService.renderTile(
                        FlofTile(self.layer, int(id)))
-        web.header('Content-Type', format)
+        image = self.layer.watermark(image)
         print image
 
 class RootController:
@@ -260,6 +263,7 @@ class FlofFacade:
                 'name':  soup.geoinfo['name'],
                 'lat':  soup.geoinfo['lat'],
                 'lon':  soup.geoinfo['lon'],
+                'id':  id,
               }
         for i in soup.findChildren('spot'):
             if i['geocoding']:

@@ -22,11 +22,15 @@ $def with (geoinfo)
         </li>
     <li class="arrow"><h3>Location</h3>
         <big>
-          <a
-          href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']&q=http:%2F%2Fflof.com.ar%2Ffeeds%2Fkmz%2Fmap%2F%3Flat%3D$geoinfo['lat']%26lon%3D$geoinfo['lon']%26d%3D600%26page%3D1%26compress%3Dfalse">View in Maps</a>
-          <a href="/image/data/$geoinfo['id']/">View in flof</a>
+          <a href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']">View in Maps</a>
         </big>
     </li>
+    <li class="arrow"><h3>Location</h3>
+        <big>
+          <a href="/image/html/$geoinfo['id']/">View Streets</a>
+        </big>
+    </li>
+
     <li class="arrow">
          <h3>Labels</h3>
          <big>
