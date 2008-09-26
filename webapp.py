@@ -288,13 +288,12 @@ class FlofFacade:
 
 
             if i['description']:
-
                 d = BeautifulStoneSoup(i['description'], convertEntities=BeautifulStoneSoup.HTML_ENTITIES).contents[0].encode('utf-8') 
+                e = i.date.contents[0][0:19]
                 ret['reviews'].append({
                     'owner': i['owner'],
                     'text':  d,
-                    'date':  datetime.strptime(i.date.contents[0][:-9], 
-                                              "%Y-%m-%d %H:%M:%S")
+                    'date':  datetime.strptime(e, "%Y-%m-%d %H:%M:%S")
                 })
         ret['urls'].sort()
         ret['geocoding'].sort()
@@ -388,7 +387,7 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-template.Template.globals['version'] = '0.0.0b4'
+template.Template.globals['version'] = '0.0.0b5'
 flof = FlofFacade()
 
 
