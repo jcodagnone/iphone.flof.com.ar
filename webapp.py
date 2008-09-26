@@ -39,6 +39,8 @@ urls = (
     '/user/([^+\\"><|/]+)/',                'UserController',
     '/user/([^+\\"><|/]+)/(\d+)/',          'UserController',
     '/search/',                             'SearchController',
+    '/about/',                              'AboutController',
+    '/tips/',                               'TipsController',
     '/near/',                               'NearController',
     '/near/([^/]+)/([^/]+)/(\d+)/(\d+)/','NearPlacesController',
     '/near/([^/]+)/([^/]+)/(\d+)/(\d+)/([^/]+)/','NearPlacesController',
@@ -50,9 +52,17 @@ urls = (
 )
 
 
-class MapImageContainerController:
-    def GET(self, id):
-        print render.imageContainer(id)
+class AboutController:
+    def GET(self):
+        print render.header('..')
+        print render.about()
+        print render.footer('..')
+
+class TipsController:
+    def GET(self):
+        print render.header('..')
+        print render.tips()
+        print render.footer('..')
 
 
 from globalmaptiles import GlobalMercator 
@@ -378,7 +388,7 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-template.Template.globals['version'] = '0.0.0b3'
+template.Template.globals['version'] = '0.0.0b4'
 flof = FlofFacade()
 
 
