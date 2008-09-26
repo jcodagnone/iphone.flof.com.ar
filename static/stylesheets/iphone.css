@@ -224,8 +224,11 @@
 					background-position: right center;
 					background-repeat: no-repeat;
 					}
-					
-					
+
+			        ul li.arrow:hover {
+					background-color: #369;
+                                }
+
 				#plastic ul li.arrow, #metal ul li.arrow {
 					background-image: url(../images/chevron_dg.png);
 					background-position: right center;
