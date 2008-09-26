@@ -163,14 +163,14 @@ ProximitySearch.prototype.drawAddresses = function(places) {
         multipleFound.style.display = 'block';
         multipleFound.appendChild(new Element('span', { 
                 'html': 'Hummm. Multiple posibilities..'}));
-        foo = this.onPositionSelected;
+        foo = this;
         for(var i = 0; i < places.length; i++) {
            var div = new Element('div', { 
                 'html': places[i].name,
                 'events': {
                     'click': function(e) {
                          multipleFound.style.display = 'none';
-                         foo(this.lat, this.lon);
+                         foo.onPositionSelected(this.lat, this.lon);
                      },
                 },
            });
