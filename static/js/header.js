@@ -347,13 +347,16 @@ window.addEvent('domready', function() {
     }
 
     var panelElement = $('optionpanel');
-    $('menu').onclick = function(e) {
-        if(panelElement.style.display == 'block') {
-                panelElement.style.display = 'none';
-        } else {
-                panelElement.style.display = 'block';
-        }
-    };
+    var menu = $('menu');
+    if(menu) {
+        menu.onclick = function(e) {
+            if(panelElement.style.display == 'block') {
+                    panelElement.style.display = 'none';
+            } else {
+                    panelElement.style.display = 'block';
+            }
+        };
+    }
 
     $('menuHide').onclick = function(e) {
         panelElement.style.display = 'none';
