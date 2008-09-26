@@ -45,8 +45,60 @@ urls = (
     '/feeds/xml/address/',                  'AddressController',
     '/feeds/xml/distance/',                 'DistanceController',
     '/feeds/xml/lookup/',                   'SpotLookupController',
+    '/image/container/(\d+)/',              'MapImageContainerController',
+    '/image/data/(\d+)/',                   'MapImageDataController',
 )
 
+
+class MapImageContainerController:
+    def GET(self, id):
+        print render.imageContainer(id)
+
+
+from globalmaptiles import GlobalMercator 
+gm = GlobalMercator()
+
+class FlofTile(object):
+    __slots__ = ( "layer", "id" , "x", "y", "z", "data")
+
+    def __init__ (self, layer, id):
+         self.layer = layer
+         self.id = id
+         spot = flof.geoinfo(self.id)
+         self.x, self.y = gm.LatLonToMeters(float(spot['lat']), float(spot['lon']))
+         self.z = id
+         self.data = 0
+         self.data = None
+
+    def size(self):
+        return [320, 356]
+
+    def bounds(self):
+       h = 1000.0
+       return ( self.x - h, self.y - h , self.x + h, self.y + h)
+
+    def bbox (self):
+        return ",".join(map(str, self.bounds()))
+
+
+from TileCache.Layers.Mapnik import Mapnik
+class MapImageDataController:
+    def __init__(self):
+        import TileCache.Service
+        from TileCache.Caches.Disk import Disk
+        from TileCache.Layer import Layer, Tile
+
+
+        self.layer = Layer("basic", debug=True)
+        self.layer = Mapnik('foo', mapfile='/home/prueba/mapnik/osm.xml')
+        self.tileService = TileCache.Service(Disk("/tmp/tilecache"),
+                                             {"layer": self.layer})
+        
+    def GET(self, id):
+        format, image = self.tileService.renderTile(
+                       FlofTile(self.layer, int(id)))
+        web.header('Content-Type', format)
+        print image
 
 class RootController:
     def GET(self):
