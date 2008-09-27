@@ -61,9 +61,9 @@ class AbstractController:
         m.update(data)
         return '"' + base64.b64encode(m.digest())[0:-2] + '"'
 
-    def GET(self):
+    def GET(self, *args):
         clientEtag = web.ctx.env.get('HTTP_IF_NONE_MATCH')
-        out = doGET()
+        out = self.doGET(*args)
         etag = self.etag(out)
         web.header('Etag', etag)
         if clientEtag and clientEtag == etag:
@@ -87,65 +87,64 @@ class NearController(AbstractController):
     def doGET(self):
         return render.header('..') + render.near() +  render.footer()
 
-class MapImageContainerController:
-    def GET(self, id):
-        print render.imageContainer(id)
+class MapImageContainerController(AbstractController):
+    def doGET(self, id):
+        return render.imageContainer(id)
 
-class MapImageDataController:
-    def GET(self, id):
-        print mapService.render(id, 320, 416, 1000.0)[1]
+class MapImageDataController(AbstractController):
+    def doGET(self, id):
+        web.header('Content-Type', 'image/png')
+        return mapService.render(id, 320, 416, 1000.0)[1]
 
-class MapImageThumbnailController:
-    def GET(self, id):
-        print mapServiceMini.render(id, 82, 82, 200.0)[1]
+class MapImageThumbnailController(AbstractController):
+    def doGET(self, id):
+        web.header('Content-Type', 'image/png')
+        return mapServiceMini.render(id, 82, 82, 200.0)[1]
 
 class RedirectPlaceController:
     def GET(self, id):
         web.seeother(id + '/')
 
-class PlaceController:
-    def GET(self, id):
+class PlaceController(AbstractController):
+    def doGET(self, id):
         referer = web.ctx.env.get('HTTP_REFERER')
         if referer == None:
                 referer = '../../'
-        print render.header(referer)
-        print render.place(flof.geoinfo(id))
-        print render.footer()
+        return render.header(referer) + render.place(flof.geoinfo(id)) + render.footer()
 
 
-class NearPlacesController:
-    def GET(self, lat, lon, distance, page, label = None):
+class NearPlacesController(AbstractController):
+    def doGET(self, lat, lon, distance, page, label = None):
         spots = flof.near(lat, lon, distance, page, label);
-        print render.nearpage(spots, page)
+        return render.nearpage(spots, page)
 
-class RecentController:
-    def GET(self, page=1):
+class RecentController(AbstractController):
+    def doGET(self, page=1):
         prefix = '..'
         page = int(page)
         spots = flof.recent(page)
         if page == 1:
-                print render.header(prefix)
-                print render.spots(spots, prefix, 'Recent Places')
-                print render.footer()
+            return render.header(prefix)  + \
+                   render.spots(spots, prefix, 'Recent Places') + \
+                   render.footer()
         elif len(spots):
-                print render.recentpage(spots, page)
+            return render.recentpage(spots, page)
 
-class UserController:
+class UserController(AbstractController):
     def GET(self, user, page=1):
         prefix = '../..'
         page = int(page)
 
         spots =  flof.user(user, page)
         if page == 1:
-                print render.header('..')
-                print render.spots(spots, prefix, 
-                                  'Places by `%s\'' % user)
-                print render.footer()
+            return render.header('..') + \
+                   render.spots(spots, prefix, 'Places by `%s\'' % user) + \
+                   render.footer()
         elif len(spots):
-                print render.recentpage(spots, page, user)
+            return render.recentpage(spots, page, user)
 
-class SearchController:
-    def GET(self, page=1):
+class SearchController(AbstractController):
+    def doGET(self, page=1):
         prefix = '..'
         page = int(page)
         if 't' in web.input():
@@ -153,35 +152,34 @@ class SearchController:
         else:
             text = None
         if text == None or text == '':
-            print render.header('..')
-            print render.search()
-            print render.footer()
+            return render.header('..') + render.search() + render.footer()
         else:
             spots =  flof.search(text, page)
             if page == 1:
-                    print render.header('..')
-                    print render.spots(spots, prefix, 
-                                      'Places that match `%s\'' % text)
-                    print render.footer()
+                return render.header('..') + \
+                       render.spots(spots, prefix,  
+                          'Places that match `%s\'' % text) + \
+                        render.footer()
             elif len(spots):
-                    print render.recentpage(spots, page, text)
-class LabelController:
-    def GET(self, label, page=1):
+                return render.recentpage(spots, page, text)
+
+class LabelController(AbstractController):
+    def doGET(self, label, page=1):
         prefix = '../..'
         page = int(page)
         spots =  flof.label(label, page)
         referer = web.ctx.env.get('HTTP_REFERER')
 
         if page == 1:
-                print render.header(referer)
-                print render.spots(spots, prefix, 
-                                  'Places labeled with `%s\'' % label)
-                print render.footer()
+            return render.header(referer) + \
+                   render.spots(spots, prefix, 
+                               'Places labeled with `%s\'' % label) + \
+                   render.footer()
         elif len(spots):
-                print render.recentpage(spots, page, label)
+             return render.recentpage(spots, page, label)
 
-class AbstractProxyController:
-    def GET(self):
+class AbstractProxyController(AbstractController):
+    def doGET(self):
         try:
            y = urllib.urlopen('%s?%s' % (self.url,
               web.ctx.env['QUERY_STRING']))
@@ -190,8 +188,9 @@ class AbstractProxyController:
                if h.startswith("Content-Type:"):
                    a = h.split(':')
                    web.header(a[0], a[1].strip())
-           print y.read()
+           ret = y.read()
            y.close()
+           return ret
         except Exception, E:
             print web.internalerror()
             print "Some unexpected error occurred. Error text was:", E
