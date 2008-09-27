@@ -49,6 +49,7 @@ urls = (
     '/feeds/xml/lookup/',                   'SpotLookupController',
     '/image/html/(\d+)/',                   'MapImageContainerController',
     '/image/data/(\d+)/',                   'MapImageDataController',
+    '/image/thumbnail/(\d+)/',              'MapImageThumbnailController',
 )
 
 
@@ -64,54 +65,65 @@ class TipsController:
         print render.tips()
         print render.footer('..')
 
+class MapImageContainerController:
+    def GET(self, id):
+        print render.imageContainer(id)
 
 from globalmaptiles import GlobalMercator 
 gm = GlobalMercator()
 
 class FlofTile(object):
-    __slots__ = ( "layer", "id" , "x", "y", "z", "data")
+    __slots__ = ( "layer", "id" , "x", "y", "z", "data", "width", 'height')
 
     def __init__ (self, layer, id):
          self.layer = layer
          self.id = id
          spot = flof.geoinfo(self.id)
          self.x, self.y = gm.LatLonToMeters(float(spot['lat']), float(spot['lon']))
-         self.z = id
+         self.z = 1000.0
          self.data = 0
          self.data = None
+         self.width = 320
+         self.height = 416
 
     def size(self):
-        #return [320, 356]
-        return [320, 416]
+        return [self.width, self.height]
 
     def bounds(self):
-       h = 1000.0
-       return ( self.x - h, self.y - h , self.x + h, self.y + h)
+       return ( self.x - self.z, self.y - self.z , self.x + self.z, self.y + self.z)
 
     def bbox (self):
         return ",".join(map(str, self.bounds()))
 
 
-from TileCache.Layers.Mapnik import Mapnik
-class MapImageDataController:
-    def __init__(self):
+class MapService:
+    """ render tiles """
+    def __init__(self, layer, osmFile, watermark, cacheDir):
         import TileCache.Service
         from TileCache.Caches.Disk import Disk
+        from TileCache.Layers.Mapnik import Mapnik
 
-        self.layer = Mapnik('osm-iphone-big',
-                 mapfile='/home/common/web/app/osm/mapnik/osm-shirley.xml',
-                 watermarkimage='static/images/watermark.png',
+        self.layer = Mapnik(layer,
+                 mapfile=osmFile,
+                 watermarkimage=watermark,
                  watermarkopacity=1.0)
-        #self.watermarkimage = '/home/common/web/app/flof/static/images/watermark.png'
-        #self.watermarkopacity = '1.0'
-        self.tileService = TileCache.Service(Disk("/tmp/tilecache"),
+        self.tileService = TileCache.Service(Disk(cacheDir),
                                              {"layer": self.layer})
-        
+    def render(self, id, tileWidth, tileHeight, delta):
+        tile =  FlofTile(self.layer, int(id))
+        tile.width = tileWidth
+        tile.height = tileHeight
+        tile.z = delta
+        format, image = self.tileService.renderTile(tile)
+        return (format, self.layer.watermark(image))
+
+class MapImageDataController:
     def GET(self, id):
-        format, image = self.tileService.renderTile(
-                       FlofTile(self.layer, int(id)))
-        image = self.layer.watermark(image)
-        print image
+        print mapService.render(id, 320, 416, 1000.0)[1]
+
+class MapImageThumbnailController:
+    def GET(self, id):
+        print mapService.render(id, 82, 82, 200.0)[1]
 
 class RootController:
     def GET(self):
@@ -390,11 +402,8 @@ template.Template.globals['len'] = len
 template.Template.globals['version'] = '0.0.0b5'
 flof = FlofFacade()
 
-
-
-
-
-
+mapService = MapService('osm-iphone-big', '../osm/mapnik/osm-shirley.xml', \
+           'static/images/watermark.png', '/tmp/tilecache')
 if __name__ == "__main__":
 
     if 'DEV' in os.environ:

@@ -1,9 +1,9 @@
 $def with (geoinfo)
 <ul class="profile">
-    <li class="picture"/>
+    <li class="picture"  style='background: #fff url(/image/thumbnail/$geoinfo['id']/) no-repeat !important;' /><a href="/image/html/$geoinfo['id']/"></a></li>
     <li class="clearfix">
         <h2>$geoinfo['name']</h2>
-        <p>...</p>
+        <p>click image to see the streets</p>
     </li>
 </ul>
 
@@ -23,11 +23,6 @@ $def with (geoinfo)
     <li class="arrow"><h3>Location</h3>
         <big>
           <a href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']">View in Maps</a>
-        </big>
-    </li>
-    <li class="arrow"><h3>Location</h3>
-        <big>
-          <a href="/image/html/$geoinfo['id']/">View Streets</a>
         </big>
     </li>
 
