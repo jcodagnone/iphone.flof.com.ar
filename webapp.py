@@ -26,7 +26,6 @@ from BeautifulSoup import BeautifulStoneSoup
 from datetime import datetime
 
 
-
 urls = (
     '/',                                    'RootController',
     '/place/(\d+)',                         'RedirectArgumentController',
@@ -53,69 +52,44 @@ urls = (
 )
 
 
-class AboutController:
-    def GET(self):
-        print render.header('..')
-        print render.about()
-        print render.footer('..')
+import md5, base64
 
-class TipsController:
+class AbstractController:
+    """ controlador base."""
+    def etag(self, data):
+        m = md5.new()
+        m.update(data)
+        return '"' + base64.b64encode(m.digest())[0:-2] + '"'
+
     def GET(self):
-        print render.header('..')
-        print render.tips()
-        print render.footer('..')
+        clientEtag = web.ctx.env.get('HTTP_IF_NONE_MATCH')
+        out = doGET()
+        etag = self.etag(out)
+        web.header('Etag', etag)
+        if clientEtag and clientEtag == etag:
+            web.ctx.status = '304 Not Modified'
+        else:
+            print out
+            
+class RootController(AbstractController):
+    def doGET(self):
+        return render.header('..') + render.root() + render.footer('..')
+
+class AboutController(AbstractController):
+    def doGET(self):
+        return render.header('..') + render.about() + render.footer('..')
+
+class TipsController(AbstractController):
+    def doGET(self):
+        return render.header('..') + render.tips() + render.footer('..')
+
+class NearController(AbstractController):
+    def doGET(self):
+        return render.header('..') + render.near() +  render.footer()
 
 class MapImageContainerController:
     def GET(self, id):
         print render.imageContainer(id)
-
-from globalmaptiles import GlobalMercator 
-gm = GlobalMercator()
-
-class FlofTile(object):
-    __slots__ = ( "layer", "id" , "x", "y", "z", "data", "width", 'height')
-
-    def __init__ (self, layer, id):
-         self.layer = layer
-         self.id = id
-         spot = flof.geoinfo(self.id)
-         self.x, self.y = gm.LatLonToMeters(float(spot['lat']), float(spot['lon']))
-         self.z = 1000.0
-         self.data = 0
-         self.data = None
-         self.width = 320
-         self.height = 416
-
-    def size(self):
-        return [self.width, self.height]
-
-    def bounds(self):
-       return ( self.x - self.z, self.y - self.z , self.x + self.z, self.y + self.z)
-
-    def bbox (self):
-        return ",".join(map(str, self.bounds()))
-
-
-class MapService:
-    """ render tiles """
-    def __init__(self, layer, osmFile, watermark, cacheDir):
-        import TileCache.Service
-        from TileCache.Caches.Disk import Disk
-        from TileCache.Layers.Mapnik import Mapnik
-
-        self.layer = Mapnik(layer,
-                 mapfile=osmFile,
-                 watermarkimage=watermark,
-                 watermarkopacity=1.0)
-        self.tileService = TileCache.Service(Disk(cacheDir),
-                                             {"layer": self.layer})
-    def render(self, id, tileWidth, tileHeight, delta):
-        tile =  FlofTile(self.layer, int(id))
-        tile.width = tileWidth
-        tile.height = tileHeight
-        tile.z = delta
-        format, image = self.tileService.renderTile(tile)
-        return (format, self.layer.watermark(image))
 
 class MapImageDataController:
     def GET(self, id):
@@ -125,26 +99,24 @@ class MapImageThumbnailController:
     def GET(self, id):
         print mapServiceMini.render(id, 82, 82, 200.0)[1]
 
-class RootController:
-    def GET(self):
-        print render.header()
-        print render.root()
+class RedirectPlaceController:
+    def GET(self, id):
+        web.seeother(id + '/')
+
+class PlaceController:
+    def GET(self, id):
+        referer = web.ctx.env.get('HTTP_REFERER')
+        if referer == None:
+                referer = '../../'
+        print render.header(referer)
+        print render.place(flof.geoinfo(id))
         print render.footer()
 
-class NearController:
-    def GET(self):
-        print render.header('..')
-        print render.near()
-        print render.footer()
 
 class NearPlacesController:
     def GET(self, lat, lon, distance, page, label = None):
         spots = flof.near(lat, lon, distance, page, label);
         print render.nearpage(spots, page)
-
-class RedirectPlaceController:
-    def GET(self, id):
-        web.seeother(id + '/')
 
 class RecentController:
     def GET(self, page=1):
@@ -208,15 +180,6 @@ class LabelController:
         elif len(spots):
                 print render.recentpage(spots, page, label)
 
-class PlaceController:
-    def GET(self, id):
-        referer = web.ctx.env.get('HTTP_REFERER')
-        if referer == None:
-                referer = '../../'
-        print render.header(referer)
-        print render.place(flof.geoinfo(id))
-        print render.footer()
-
 class AbstractProxyController:
     def GET(self):
         try:
@@ -241,6 +204,56 @@ class DistanceController(AbstractProxyController):
 
 class SpotLookupController(AbstractProxyController):
     url = 'http://test.flof.com.ar/bin/spot/lookup/'
+
+from globalmaptiles import GlobalMercator 
+gm = GlobalMercator()
+
+class FlofTile(object):
+    __slots__ = ( "layer", "id" , "x", "y", "z", "data", "width", 'height')
+
+    def __init__ (self, layer, id):
+         self.layer = layer
+         self.id = id
+         spot = flof.geoinfo(self.id)
+         self.x, self.y = gm.LatLonToMeters(float(spot['lat']), float(spot['lon']))
+         self.z = 1000.0
+         self.data = 0
+         self.data = None
+         self.width = 320
+         self.height = 416
+
+    def size(self):
+        return [self.width, self.height]
+
+    def bounds(self):
+       return ( self.x - self.z, self.y - self.z , self.x + self.z, self.y + self.z)
+
+    def bbox (self):
+        return ",".join(map(str, self.bounds()))
+
+
+class MapService:
+    """ render tiles """
+    def __init__(self, layer, osmFile, watermark, cacheDir):
+        import TileCache.Service
+        from TileCache.Caches.Disk import Disk
+        from TileCache.Layers.Mapnik import Mapnik
+
+        self.layer = Mapnik(layer,
+                 mapfile=osmFile,
+                 watermarkimage=watermark,
+                 watermarkopacity=1.0)
+        self.tileService = TileCache.Service(Disk(cacheDir),
+                                             {"layer": self.layer})
+    def render(self, id, tileWidth, tileHeight, delta):
+        tile =  FlofTile(self.layer, int(id))
+        tile.width = tileWidth
+        tile.height = tileHeight
+        tile.z = delta
+        format, image = self.tileService.renderTile(tile)
+        return (format, self.layer.watermark(image))
+
+
 
 class FlofFacade:
     headers = {}
@@ -394,6 +407,7 @@ def uniquer(seq, idfun=None):
         result.append(item)
     return result
 
+
     
 #########################################################################
 
@@ -408,8 +422,8 @@ mapService = MapService('osm-iphone-big', '../osm/mapnik/osm-shirley.xml', \
 mapServiceMini = MapService('osm-iphone-thumb',  \
            '../osm/mapnik/osm-shirley.xml', \
            'static/images/watermarkmini.png', '/tmp/tilecache')
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     if 'DEV' in os.environ:
         middleware = [web.reloader]
     else:
