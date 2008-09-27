@@ -418,7 +418,7 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-template.Template.globals['version'] = '6'
+template.Template.globals['version'] = '7'
 flof = FlofFacade()
 
 mapService = MapService('osm-iphone-big', '../osm/mapnik/osm-shirley.xml', \

@@ -118,7 +118,7 @@ ProximitySearch.prototype.updateLabel = function() {
            var entries = xml.getElementsByTagName('entry');
 
            labels.appendChild(new Element('option', { 
-                 'html': 'Filter by label...'}));
+                 'html': '... filtering using the the label...'}));
            for(var i = 0; i < entries.length; i++) {
                var show = entries[i].getElementsByTagName('showText')[0].childNodes[0].data;
 
