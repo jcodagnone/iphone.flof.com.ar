@@ -286,11 +286,31 @@ function registerProximity() {
 
    var address = $('address');
    var defaultAddress = 'Callao y Santa Fe'
-   address.onclick = function(e) {
-       if(this.value == defaultAddress) {
-           this.value = "";
-       }
+
+   $('distance').onchange= function(e) {
+        proximity.page = 1;
+        proximity.updateLabel();
+        proximity.updatePlaces();
    };
+
+   $('more').addEvent('click', function() {
+       proximity.updatePlaces();
+       proximity.page = proximity.page + 1;
+   });
+
+   $('labels').onchange= function(e) {
+       proximity.label = this.selectedIndex == 0 ? '' : 
+                           this.options[this.selectedIndex].value;
+       proximity.page = 1;
+       proximity.updatePlaces();
+   }
+
+   if(initialLat == null ||  initialLon == null) {
+       address.value = defaultAddress;
+   } else {
+       proximity.onPositionSelected(initialLat, initialLon);
+       address.value = initialLat + ', ' + initialLon;
+   }  
 
    address.onblur = function(e) {
        proximity.startProgressBar();
@@ -312,26 +332,15 @@ function registerProximity() {
            }
        }).send();
    };
-   address.value = defaultAddress;
-
-
-   $('distance').onchange= function(e) {
-        proximity.page = 1;
-        proximity.updateLabel();
-        proximity.updatePlaces();
+   address.onclick = function(e) {
+       if(this.value == defaultAddress) {
+           this.value = "";
+       }
    };
 
-   $('more').addEvent('click', function() {
-       proximity.updatePlaces();
-       proximity.page = proximity.page + 1;
-   });
 
-   $('labels').onchange= function(e) {
-       proximity.label = this.selectedIndex == 0 ? '' : 
-                           this.options[this.selectedIndex].value;
-       proximity.page = 1;
-       proximity.updatePlaces();
-   }
+
+
 }
 
 ///////////////////////////////////////////////////////////////////////////

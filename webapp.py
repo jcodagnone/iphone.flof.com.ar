@@ -85,7 +85,12 @@ class TipsController(AbstractController):
 
 class NearController(AbstractController):
     def doGET(self):
-        return render.header('..') + render.near() +  render.footer()
+        lat, lon  = None, None
+        if 'lat' in web.input():
+            lat = web.input().lat
+        if 'lon' in web.input():
+            lon = web.input().lon
+        return render.header('..') + render.near(lat, lon) +  render.footer()
 
 class MapImageContainerController(AbstractController):
     def doGET(self, id):
@@ -107,10 +112,16 @@ class RedirectPlaceController:
 
 class PlaceController(AbstractController):
     def doGET(self, id):
+        spot = flof.geoinfo(id)
         referer = web.ctx.env.get('HTTP_REFERER')
         if referer == None:
-                referer = '../../'
-        return render.header(referer) + render.place(flof.geoinfo(id)) + render.footer()
+            referer = '../../'
+        else:
+            v = referer.split('/')
+            if len(v) >= 3 and v[3] == 'near':
+                referer = '../../near/?lat=%s&lon=%s' % (spot['lat'],
+                                                         spot['lon'])
+        return render.header(referer) + render.place(spot) + render.footer()
 
 
 class NearPlacesController(AbstractController):
@@ -412,7 +423,7 @@ def uniquer(seq, idfun=None):
 
 render = web.template.render('templates/', cache='DEV' not in os.environ)
 template.Template.globals['len'] = len
-template.Template.globals['version'] = '0.0.0b5'
+template.Template.globals['version'] = '6'
 flof = FlofFacade()
 
 mapService = MapService('osm-iphone-big', '../osm/mapnik/osm-shirley.xml', \
