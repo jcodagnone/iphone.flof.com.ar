@@ -123,7 +123,7 @@ class MapImageDataController:
 
 class MapImageThumbnailController:
     def GET(self, id):
-        print mapService.render(id, 82, 82, 200.0)[1]
+        print mapServiceMini.render(id, 82, 82, 200.0)[1]
 
 class RootController:
     def GET(self):
@@ -404,6 +404,10 @@ flof = FlofFacade()
 
 mapService = MapService('osm-iphone-big', '../osm/mapnik/osm-shirley.xml', \
            'static/images/watermark.png', '/tmp/tilecache')
+
+mapServiceMini = MapService('osm-iphone-thumb',  \
+           '../osm/mapnik/osm-shirley.xml', \
+           'static/images/watermarkmini.png', '/tmp/tilecache')
 if __name__ == "__main__":
 
     if 'DEV' in os.environ:
