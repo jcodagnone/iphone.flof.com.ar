@@ -25,6 +25,11 @@ $def with (geoinfo)
           <a href="http://www.google.com/maps?ll=$geoinfo['lat'],$geoinfo['lon']">View in Maps</a>
         </big>
     </li>
+    <li class="arrow">
+         <h3>&nbsp;</h3>
+         <big><a href="../../near/?lat=$geoinfo['lat']&lon=$geoinfo['lon']">Places near...</a>
+         </big>
+    </li>
 
     <li class="arrow">
          <h3>Labels</h3>
@@ -32,6 +37,7 @@ $def with (geoinfo)
             $for label in geoinfo['labels']: <a href="../../label/$label/">$label</a>
          </big>
     </li>
+
 </ul>
 
 $if len(geoinfo['reviews']):
