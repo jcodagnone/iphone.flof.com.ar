@@ -56,16 +56,11 @@ import md5, base64
 
 class AbstractController:
     """ controlador base."""
-    def etag(self, data):
-        m = md5.new()
-        m.update(data)
-        return '"' + base64.b64encode(m.digest())[0:-2] + '"'
-
     def GET(self, *args):
         clientEtag = web.ctx.env.get('HTTP_IF_NONE_MATCH')
         out = self.doGET(*args)
-        etag = self.etag(out)
-        web.header('Etag', etag)
+        etag = 'W/"%s"' % md5.new(out).hexdigest() 
+        web.header('ETag', etag)
         if clientEtag and clientEtag == etag:
             web.ctx.status = '304 Not Modified'
         else:
