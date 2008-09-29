@@ -137,10 +137,9 @@ class RecentController(AbstractController):
             return render.recentpage(spots, page)
 
 class UserController(AbstractController):
-    def GET(self, user, page=1):
+    def doGET(self, user, page=1):
         prefix = '../..'
         page = int(page)
-
         spots =  flof.user(user, page)
         if page == 1:
             return render.header('..') + \
@@ -202,13 +201,13 @@ class AbstractProxyController(AbstractController):
             print "Some unexpected error occurred. Error text was:", E
 
 class AddressController(AbstractProxyController):
-    url = 'http://test.flof.com.ar/feeds/xml/address/'
+    url = 'http://flof.com.ar/feeds/xml/address/'
 
 class DistanceController(AbstractProxyController):
-    url = 'http://test.flof.com.ar/feeds/xml/distance/'
+    url = 'http://flof.com.ar/feeds/xml/distance/'
 
 class SpotLookupController(AbstractProxyController):
-    url = 'http://test.flof.com.ar/bin/spot/lookup/'
+    url = 'http://flof.com.ar/bin/spot/lookup/'
 
 from globalmaptiles import GlobalMercator 
 gm = GlobalMercator()
@@ -262,7 +261,7 @@ class MapService:
 
 class FlofFacade:
     headers = {}
-    URL_BASE   = 'http://test.flof.com.ar'
+    URL_BASE   = 'http://flof.com.ar'
     URL_SPOT   = '%s/feeds/xml/geoinfo/%s/'
     URL_RECENT = '%s/feeds/xml/recent/?page=%s'
     URL_LABEL  = '%s/feeds/xml/label/%s/?page=%s'
