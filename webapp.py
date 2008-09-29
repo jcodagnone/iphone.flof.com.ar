@@ -142,7 +142,7 @@ class UserController(AbstractController):
         page = int(page)
         spots =  flof.user(user, page)
         if page == 1:
-            return render.header('..') + \
+            return render.header('../..') + \
                    render.spots(spots, prefix, 'Places by `%s\'' % user) + \
                    render.footer()
         elif len(spots):
